@@ -41,8 +41,8 @@ class Markdown:
 
     def __init__(self, filename: str):
         self.filename = filename
-        self.link_defines = {}
-        self.link_refs = []
+        self._link_defines = {}
+        self._link_refs = []
 
     def analyze(self) -> list:
         """
@@ -50,13 +50,16 @@ class Markdown:
         problem it finds, if any.
         :return: List of warning messages, if any. Otherwise an empty list.
         """
+        self._link_defines = {}
+        self._link_refs = []
         with open(self.filename, "r") as a_file:
             return self._analyze_lines(a_file)
 
     def is_valid(self) -> bool:
         """
-        Reports whether or not the Markdown document
-        :return:
+        Reports whether or not the Markdown document is valid, meaning it has no
+        potential problems to report.
+        :return: True if the document contains no warnings, otherwise False.
         """
         return len(self.analyze()) == 0
 
@@ -78,19 +81,21 @@ class Markdown:
                               named_link_define_match.groups())
                 link_name = named_link_define_match.group(1)
                 link_url = named_link_define_match.group(2)
-                if link_name in self.link_defines:
+                if link_name in self._link_defines:
                     warnings.append(
                         f"Duplicate name of named link: [{link_name}]")
-                if link_url in self.link_defines.values():
+                if link_url in self._link_defines.values():
                     warnings.append(
                         f"Duplicate URL of named link: {link_url}")
-                self.link_defines[link_name] = link_url
+                self._link_defines[link_name] = link_url
             elif named_link_ref_match:
                 logging.debug("Named link ref: %s",
                               named_link_ref_match.groups())
                 link_name = named_link_ref_match.group(2)
-                self.link_refs.append(link_name)
-        for ref in self.link_refs:
-            if ref not in self.link_defines:
+                self._link_refs.append(link_name)
+        for ref in self._link_refs:
+            if ref not in self._link_defines:
                 warnings.append(f"Named link reference has no URL: [{ref}]")
+        # TODO: Check if named link definitions appear in the same order as
+        #       their references are used in the document
         return warnings
