@@ -1,12 +1,25 @@
-import unittest
+"""
+Unit tests for markdown_validator package.
 
-from markdown_validator.__main__ import Markdown
+Usage: python3 -m test.py
+"""
+import unittest
 
 from typing import Optional
 
+from markdown_validator import Markdown
+
 
 class TestRegEx(unittest.TestCase):
+    """
+    Unit tests for the regular expressions defined in the Markdown class
+    """
+
     def _create_test_match_fn(self, regex_pattern):
+        """
+        Returns a helper function to flex the given regular expression pattern
+        using simple test(str, expected_match_bool, message) syntax
+        """
         def _test_match_fn(test_str: str, expected_result: bool,
                            msg: Optional[str] = None):
             if expected_result:
@@ -16,6 +29,9 @@ class TestRegEx(unittest.TestCase):
         return _test_match_fn
 
     def test_named_link_def(self):
+        """
+        Unit tests for the Markdown.named_link_define_pattern regular expression
+        """
         test = self._create_test_match_fn(Markdown.named_link_define_pattern)
         test("[Link Name]: https://www.google.com/webhp?a=1&b=2#header_link",
              True, "named link definition with space and complicated URL")
@@ -50,6 +66,9 @@ class TestRegEx(unittest.TestCase):
              False, "URL only")
 
     def test_named_link_ref(self):
+        """
+        Unit tests for the Markdown.named_link_ref_pattern regular expression
+        """
         test = self._create_test_match_fn(Markdown.named_link_ref_pattern)
         test("[Link Name]", True, "named link reference with space")
         test("[LinkName]", True, "named link reference without space")
