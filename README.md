@@ -8,7 +8,3 @@ links or other common mistakes.
 ```
 python3 -m markdown_validator my_markdown_document.md
 ```
-
-
-[Google Home]: http://www.google.com/webhp?a=1&b=2%20+3?#c_d
-[Google Home]: http://www.google.com/webhp?a=1&b=2%20+3?#c_d
