@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 markdown-validator
 
@@ -11,6 +10,7 @@ import sys
 import logging
 
 from . import Markdown
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

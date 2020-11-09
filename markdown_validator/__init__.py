@@ -3,6 +3,7 @@ markdown-validator
 
 Checks for broken links and other common mistakes in Markdown files.
 """
+
 import re
 import logging
 
