@@ -13,7 +13,7 @@ from . import Markdown
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     if len(sys.argv) != 2 or sys.argv[1] in ["--help", "-h"]:
         print(f"Usage: python3 {sys.argv[0]} <my_document.md>")
         sys.exit(1)

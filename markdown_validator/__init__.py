@@ -31,6 +31,8 @@ class Markdown:
         """, re.VERBOSE)
 
     # Go to [this website] to learn more.
+    # TODO: Take into account renamed links like [this one][link].
+    #       Add an optional [link] group before the main group with no space b/w
     named_link_ref_pattern = re.compile(
         r"""
         (.)?               # any character (not the start of line)
