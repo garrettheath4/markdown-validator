@@ -20,6 +20,6 @@ if __name__ == '__main__':
 
     filename_arg = sys.argv[1]
     md = Markdown(filename_arg)
-    md_warnings = md.analyze_file()
+    md_warnings = md.analyze()
     for w in md_warnings:
         print(w)
