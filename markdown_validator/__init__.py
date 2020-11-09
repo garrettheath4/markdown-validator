@@ -9,6 +9,9 @@ import logging
 
 
 class Markdown:
+    """
+    Reads and analyzes a Markdown file and reports any issues it may have.
+    """
     # [LinkName]: https://www.google.com/webhp?a=1&b=2#header_link
     named_link_define_pattern = re.compile(
         r"""
@@ -25,6 +28,7 @@ class Markdown:
         [\w./_?=&%+#-]*)   # ww.google.com/webhp?a=1&b=2#header_link
         """, re.VERBOSE)
 
+    # Go to [this website] to learn more.
     named_link_ref_pattern = re.compile(
         r"""
         (.)?               # any character (not the start of line)
@@ -37,7 +41,8 @@ class Markdown:
 
     def __init__(self, filename: str):
         self.filename = filename
-        self.links = {}
+        self.link_defines = {}
+        self.link_refs = []
 
     def analyze_file(self):
         """
@@ -47,19 +52,30 @@ class Markdown:
         warnings = []
         with open(self.filename, "r") as a_file:
             for line in a_file:
-                named_link_match = Markdown.named_link_define_pattern.match(
-                    line)
-                if named_link_match:
+                named_link_define_match = \
+                    Markdown.named_link_define_pattern.match(line)
+                named_link_ref_match = \
+                    Markdown.named_link_ref_pattern.match(line)
+                if named_link_define_match:
                     logging.debug("Named link line: %s", line.strip())
+                    # noinspection SpellCheckingInspection
                     logging.debug("Named link grps: %s",
-                                  named_link_match.groups())
-                    link_name = named_link_match.group(1)
-                    link_url = named_link_match.group(2)
-                    if link_name in self.links:
+                                  named_link_define_match.groups())
+                    link_name = named_link_define_match.group(1)
+                    link_url = named_link_define_match.group(2)
+                    if link_name in self.link_defines:
                         warnings.append(
-                            f"Duplicate name of named link: {link_name}")
-                    if link_url in self.links.values():
+                            f"Duplicate name of named link: [{link_name}]")
+                    if link_url in self.link_defines.values():
                         warnings.append(
                             f"Duplicate URL of named link: {link_url}")
-                    self.links[link_name] = link_url
+                    self.link_defines[link_name] = link_url
+                elif named_link_ref_match:
+                    logging.debug("Named link ref: %s",
+                                  named_link_ref_match.groups())
+                    link_name = named_link_ref_match.group(2)
+                    self.link_refs.append(link_name)
+        for ref in self.link_refs:
+            if ref not in self.link_defines:
+                warnings.append(f"Named link reference has no URL: [{ref}]")
         return warnings
