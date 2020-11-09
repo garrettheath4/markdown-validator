@@ -7,6 +7,8 @@ Checks for broken links and other common mistakes in Markdown files.
 import re
 import logging
 
+from typing import List
+
 
 class Markdown:
     """
@@ -41,16 +43,18 @@ class Markdown:
 
     def __init__(self, filename: str):
         self.filename = filename
-        self._link_defines = {}
+        self._link_definitions_dict = {}
+        self._link_definitions_order = []
         self._link_refs = []
 
-    def analyze(self) -> list:
+    def analyze(self) -> List[str]:
         """
         Analyzes the Markdown document and generates a warning message for each
         problem it finds, if any.
         :return: List of warning messages, if any. Otherwise an empty list.
         """
-        self._link_defines = {}
+        self._link_definitions_dict = {}
+        self._link_definitions_order = []
         self._link_refs = []
         with open(self.filename, "r") as a_file:
             return self._analyze_lines(a_file)
@@ -63,7 +67,7 @@ class Markdown:
         """
         return len(self.analyze()) == 0
 
-    def _analyze_lines(self, lines: iter) -> list:
+    def _analyze_lines(self, lines: iter) -> List[str]:
         """
         Analyzes a list of lines and returns a list of problems, if any.
         Otherwise returns an empty list.
@@ -72,30 +76,50 @@ class Markdown:
         for line in lines:
             named_link_define_match = \
                 Markdown.named_link_define_pattern.match(line)
-            named_link_ref_match = \
-                Markdown.named_link_ref_pattern.match(line)
+            named_link_ref_matches = \
+                Markdown.named_link_ref_pattern.findall(line)
             if named_link_define_match:
+                # ('LinkA', 'https://www.google.com/')
                 logging.debug("Named link line: %s", line.strip())
                 # noinspection SpellCheckingInspection
                 logging.debug("Named link grps: %s",
                               named_link_define_match.groups())
                 link_name = named_link_define_match.group(1)
                 link_url = named_link_define_match.group(2)
-                if link_name in self._link_defines:
+                if link_name in self._link_definitions_dict:
                     warnings.append(
                         f"Duplicate name of named link: [{link_name}]")
-                if link_url in self._link_defines.values():
+                if link_url in self._link_definitions_dict.values():
                     warnings.append(
                         f"Duplicate URL of named link: {link_url}")
-                self._link_defines[link_name] = link_url
-            elif named_link_ref_match:
-                logging.debug("Named link ref: %s",
-                              named_link_ref_match.groups())
-                link_name = named_link_ref_match.group(2)
-                self._link_refs.append(link_name)
+                if link_name not in self._link_definitions_order:
+                    self._link_definitions_order.append(link_name)
+                self._link_definitions_dict[link_name] = link_url
+            elif named_link_ref_matches:
+                # [('', 'LinkA'), (' ', 'LinkB')]
+                for ref_match in named_link_ref_matches:
+                    logging.debug("Named link ref: %s", ref_match)
+                    link_name = ref_match[1]
+                    self._link_refs.append(link_name)
         for ref in self._link_refs:
-            if ref not in self._link_defines:
+            if ref not in self._link_definitions_dict:
                 warnings.append(f"Named link reference has no URL: [{ref}]")
-        # TODO: Check if named link definitions appear in the same order as
-        #       their references are used in the document
+        warnings.extend(self._check_link_order())
+        return warnings
+
+    def _check_link_order(self) -> List[str]:
+        warnings = []
+        link_refs = self._link_refs.copy()
+        for def_name in self._link_definitions_order:
+            if not link_refs:
+                warnings.append(f"Named link reference appears unused: "
+                                f"[{def_name}]")
+            else:
+                next_link_ref = link_refs.pop(0)
+                if next_link_ref != def_name:
+                    warnings.append(f"Expected next named link reference to be "
+                                    f"[{def_name}] but instead found "
+                                    f"[{next_link_ref}]")
+                while next_link_ref in link_refs:
+                    link_refs.remove(next_link_ref)
         return warnings

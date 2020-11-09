@@ -15,24 +15,24 @@ class TestRegEx(unittest.TestCase):
     Unit tests for the regular expressions defined in the Markdown class
     """
 
-    def _create_test_match_fn(self, regex_pattern):
+    def _create_test_search_fn(self, regex_pattern):
         """
         Returns a helper function to flex the given regular expression pattern
         using simple test(str, expected_match_bool, message) syntax
         """
-        def _test_match_fn(test_str: str, expected_result: bool,
+        def _test_search_fn(test_str: str, expected_result: bool,
                            msg: Optional[str] = None):
             if expected_result:
                 self.assertIsNotNone(regex_pattern.search(test_str), msg)
             else:
                 self.assertIsNone(regex_pattern.search(test_str), msg)
-        return _test_match_fn
+        return _test_search_fn
 
     def test_named_link_def(self):
         """
         Unit tests for the Markdown.named_link_define_pattern regular expression
         """
-        test = self._create_test_match_fn(Markdown.named_link_define_pattern)
+        test = self._create_test_search_fn(Markdown.named_link_define_pattern)
         test("[Link Name]: https://www.google.com/webhp?a=1&b=2#header_link",
              True, "named link definition with space and complicated URL")
         test("[Link Name]: http://www.google.com/webhp?a=1&b=2#header_link",
@@ -69,7 +69,7 @@ class TestRegEx(unittest.TestCase):
         """
         Unit tests for the Markdown.named_link_ref_pattern regular expression
         """
-        test = self._create_test_match_fn(Markdown.named_link_ref_pattern)
+        test = self._create_test_search_fn(Markdown.named_link_ref_pattern)
         test("[Link Name]", True, "named link reference with space")
         test("[LinkName]", True, "named link reference without space")
         test("[L]", True, "named link reference with single character")
@@ -81,6 +81,10 @@ class TestRegEx(unittest.TestCase):
              True, "inline named link ref followed by colon, space, and URL")
         test(" [L]:http://www.google.com/",
              True, "inline named link ref followed by colon and URL")
+
+        test("A [One] and [Two] B", True, "2 named link refs in 1 line")
+        test("A [One] and [Two] B", True, "2 named link refs at start of line")
+        test("A [One], [Two] B, and [3]", True, "3 named link refs in 1 line")
 
         test("[L]:", False, "named link ref followed by colon")
         test("[L]: http://w", False, "named link ref followed by ': http://w'")
