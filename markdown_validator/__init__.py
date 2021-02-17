@@ -27,7 +27,7 @@ class Markdown:
         (\w+               # http
         ://                # ://
         [\w]               # w
-        [\w./_?=&%+#-]*)   # ww.google.com/webhp?a=1&b=2#header_link
+        [\w.:/_?=&%+#-]*)  # ww.google.com/webhp?a=1&b=2#header_link
         """, re.VERBOSE)
 
     # Go to [this website] to learn more.
